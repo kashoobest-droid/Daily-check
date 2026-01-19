@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Connection Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 2.5rem;
+        }
+        
+        .status-box {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ddd;
+        }
+        
+        .status-box.success {
+            border-left-color: #10b981;
+            background: #f0f9ff;
+        }
+        
+        .status-box.error {
+            border-left-color: #ef4444;
+            background: #fef2f2;
+        }
+        
+        .status-box.warning {
+            border-left-color: #f59e0b;
+            background: #fffbeb;
+        }
+        
+        .credential-input {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin: 10px 0;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        button.secondary {
+            background: #6b7280;
+        }
+        
+        .logs {
+            background: #1f2937;
+            color: #d1d5db;
+            padding: 15px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 5px;
+            border-bottom: 1px solid #374151;
+        }
+        
+        .log-success { color: #10b981; }
+        .log-error { color: #ef4444; }
+        .log-info { color: #3b82f6; }
+        .log-warning { color: #f59e0b; }
+        
+        .step {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .step:last-child {
+            border-bottom: none;
+        }
+        
+        .step-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        
+        .step-title {
+            display: inline-block;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .instructions {
+            margin-left: 40px;
+            margin-top: 10px;
+            color: #666;
+            font-size: 0.95rem;
+        }
+        
+        .success-message {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border-radius: 10px;
+            margin: 20px 0;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Supabase Connection Test</h1>
+        
+        <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-title">Enter Your Supabase Credentials</div>
+            <div class="instructions">
+                Get these from Supabase dashboard → Settings → API
+            </div>
+            
+            <div class="credential-input">
+                <label for="supabaseUrl">Supabase URL:</label>
+                <input type="text" id="supabaseUrl" placeholder="https://your-project-id.supabase.co">
+            </div>
+            
+            <div class="credential-input">
+                <label for="supabaseKey">Supabase Anon Key:</label>
+                <input type="text" id="supabaseKey" placeholder="eyJhbGciOiJIUzI1NiIs...">
+            </div>
+            
+            <button onclick="saveCredentials()">💾 Save Credentials</button>
+        </div>
+        
+        <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-title">Test Connection</div>
+            <div class="instructions">
+                Check if we can connect to your Supabase database
+            </div>
+            
+            <button onclick="testConnection()">🔌 Test Supabase Connection</button>
+            <div id="connectionStatus" class="status-box"></div>
+        </div>
+        
+        <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-title">Create Test Table</div>
+            <div class="instructions">
+                Creates a simple test table in your Supabase database
+            </div>
+            
+            <button onclick="createTable()">📊 Create Test Table</button>
+            <div id="tableStatus" class="status-box"></div>
+        </div>
+        
+        <div class="step">
+            <div class="step-number">4</div>
+            <div class="step-title">Test CRUD Operations</div>
+            <div class="instructions">
+                Test creating, reading, updating, and deleting data
+            </div>
+            
+            <button onclick="createTestData()">➕ Create Test Data</button>
+            <button onclick="readTestData()" class="secondary">👁️ Read Data</button>
+            <button onclick="updateTestData()" class="secondary">✏️ Update Data</button>
+            <button onclick="deleteTestData()" class="secondary">🗑️ Delete Data</button>
+            
+            <div id="crudStatus" class="status-box"></div>
+        </div>
+        
+        <div class="success-message" id="successMessage" style="display: none;">
+            ✅ All tests passed! Your Supabase is working correctly!
+        </div>
+        
+        <div class="logs">
+            <div id="logOutput"></div>
+        </div>
+    </div>
+
+    <script>
+        let supabase = null;
+        let testTableCreated = false;
+        
+        function log(message, type = 'info') {
+            const logOutput = document.getElementById('logOutput');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${type}`;
+            logEntry.innerHTML = `[${timestamp}] ${message}`;
+            logOutput.appendChild(logEntry);
+            logOutput.scrollTop = logOutput.scrollHeight;
+        }
+        
+        function updateStatus(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = message;
+            element.className = `status-box ${type}`;
+        }
+        
+        function getCredentials() {
+            const url = localStorage.getItem('supabase_url') || 
+                       document.getElementById('supabaseUrl').value;
+            const key = localStorage.getItem('supabase_key') || 
+                       document.getElementById('supabaseKey').value;
+            
+            // Auto-fill the inputs
+            if (url && !document.getElementById('supabaseUrl').value) {
+                document.getElementById('supabaseUrl').value = url;
+            }
+            if (key && !document.getElementById('supabaseKey').value) {
+                document.getElementById('supabaseKey').value = key;
+            }
+            
+            return { url, key };
+        }
+        
+        function saveCredentials() {
+            const url = document.getElementById('supabaseUrl').value.trim();
+            const key = document.getElementById('supabaseKey').value.trim();
+            
+            if (!url || !key) {
+                updateStatus('connectionStatus', '❌ Please enter both URL and Key', 'error');
+                return;
+            }
+            
+            localStorage.setItem('supabase_url', url);
+            localStorage.setItem('supabase_key', key);
+            
+            updateStatus('connectionStatus', '✅ Credentials saved to localStorage', 'success');
+            log('Credentials saved to localStorage');
+            
+            // Auto-test connection
+            setTimeout(testConnection, 500);
+        }
+        
+        function initSupabase() {
+            const { url, key } = getCredentials();
+            
+            if (!url || !key) {
+                log('No credentials found. Please enter them first.', 'error');
+                return null;
+            }
+            
+            if (!window.supabase) {
+                log('Supabase JS library not loaded', 'error');
+                return null;
+            }
+            
+            try {
+                supabase = window.supabase.createClient(url, key);
+                log('Supabase client initialized', 'success');
+                return supabase;
+            } catch (error) {
+                log(`Failed to initialize Supabase: ${error.message}`, 'error');
+                return null;
+            }
+        }
+        
+        async function testConnection() {
+            updateStatus('connectionStatus', '⏳ Testing connection...', 'warning');
+            log('Testing Supabase connection...');
+            
+            if (!supabase) {
+                supabase = initSupabase();
+            }
+            
+            if (!supabase) {
+                updateStatus('connectionStatus', '❌ Supabase client not initialized', 'error');
+                return;
+            }
+            
+            try {
+                // Test 1: Check authentication session
+                const { data: session, error: authError } = await supabase.auth.getSession();
+                
+                if (authError) {
+                    throw new Error(`Auth error: ${authError.message}`);
+                }
+                
+                // Test 2: Try to fetch database info
+                const { data, error } = await supabase.from('_tables').select('*').limit(1);
+                
+                // Even if this fails, we might still have a connection
+                if (error && !error.message.includes('relation "_tables" does not exist')) {
+                    throw error;
+                }
+                
+                updateStatus('connectionStatus', '✅ Connected to Supabase successfully!', 'success');
+                log('✅ Connection test passed!');
+                
+                // Auto-create table
+                setTimeout(createTable, 1000);
+                
+            } catch (error) {
+                updateStatus('connectionStatus', `❌ Connection failed: ${error.message}`, 'error');
+                log(`Connection error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function createTable() {
+            if (!supabase) {
+                supabase = initSupabase();
+            }
+            
+            updateStatus('tableStatus', '⏳ Creating test table...', 'warning');
+            log('Creating test table...');
+            
+            try {
+                // First, check if table already exists
+                const { error: checkError } = await supabase
+                    .from('test_entries')
+                    .select('*')
+                    .limit(1);
+                
+                if (!checkError || checkError.message.includes('does not exist')) {
+                    // Table doesn't exist, create it via REST API (since we can't run SQL directly)
+                    // We'll create it by inserting data (Supabase auto-creates tables with RLS)
+                    const { data, error } = await supabase
+                        .from('test_entries')
+                        .insert([
+                            {
+                                name: 'Test Entry',
+                                description: 'This is a test entry to create the table',
+                                created_at: new Date().toISOString()
+                            }
+                        ])
+                        .select();
+                    
+                    if (error) {
+                        // If insert fails, table might need RLS setup
+                        log(`Note: Table might need manual setup. Please run this SQL in Supabase:`, 'warning');
+                        log(`CREATE TABLE test_entries (
+                            id BIGSERIAL PRIMARY KEY,
+                            name TEXT,
+                            description TEXT,
+                            created_at TIMESTAMPTZ DEFAULT NOW()
+                        );`, 'info');
+                        log(`ALTER TABLE test_entries ENABLE ROW LEVEL SECURITY;`, 'info');
+                        log(`CREATE POLICY "Enable all operations for authenticated users" ON test_entries
+                            FOR ALL USING (auth.uid() IS NOT NULL);`, 'info');
+                        
+                        throw new Error('Table creation might require manual SQL. Check logs above.');
+                    }
+                    
+                    // Delete the test entry we just created
+                    await supabase.from('test_entries').delete().eq('id', data[0].id);
+                    
+                    testTableCreated = true;
+                    updateStatus('tableStatus', '✅ Test table created successfully!', 'success');
+                    log('✅ Test table created');
+                } else {
+                    // Table already exists
+                    testTableCreated = true;
+                    updateStatus('tableStatus', '✅ Test table already exists', 'success');
+                    log('✅ Test table already exists');
+                }
+                
+            } catch (error) {
+                updateStatus('tableStatus', `⚠️ Table setup: ${error.message}`, 'warning');
+                log(`Table creation note: ${error.message}`, 'warning');
+            }
+        }
+        
+        async function createTestData() {
+            if (!supabase) {
+                supabase = initSupabase();
+            }
+            
+            if (!testTableCreated) {
+                updateStatus('crudStatus', '⚠️ Please create table first', 'warning');
+                return;
+            }
+            
+            updateStatus('crudStatus', '⏳ Creating test data...', 'warning');
+            log('Creating test data...');
+            
+            try {
+                const testData = {
+                    name: `Test Entry ${Date.now()}`,
+                    description: 'This is test data created by the connection tester',
+                    created_at: new Date().toISOString()
+                };
+                
+                const { data, error } = await supabase
+                    .from('test_entries')
+                    .insert([testData])
+                    .select();
+                
+                if (error) throw error;
+                
+                // Save the ID for later tests
+                localStorage.setItem('test_entry_id', data[0].id);
+                
+                updateStatus('crudStatus', `✅ Test data created (ID: ${data[0].id})`, 'success');
+                log(`✅ Created test data with ID: ${data[0].id}`);
+                
+            } catch (error) {
+                updateStatus('crudStatus', `❌ Create failed: ${error.message}`, 'error');
+                log(`Create error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function readTestData() {
+            if (!supabase) {
+                supabase = initSupabase();
+            }
+            
+            updateStatus('crudStatus', '⏳ Reading test data...', 'warning');
+            log('Reading test data...');
+            
+            try {
+                const { data, error } = await supabase
+                    .from('test_entries')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(5);
+                
+                if (error) throw error;
+                
+                if (data.length === 0) {
+                    updateStatus('crudStatus', '📭 No test data found', 'info');
+                    log('No test data found in database');
+                } else {
+                    updateStatus('crudStatus', `✅ Found ${data.length} test entries`, 'success');
+                    log(`✅ Found ${data.length} entries:`);
+                    data.forEach(entry => {
+                        log(`   ID: ${entry.id}, Name: "${entry.name}", Created: ${new Date(entry.created_at).toLocaleTimeString()}`);
+                    });
+                }
+                
+            } catch (error) {
+                updateStatus('crudStatus', `❌ Read failed: ${error.message}`, 'error');
+                log(`Read error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function updateTestData() {
+            if (!supabase) {
+                supabase = initSupabase();
+            }
+            
+            const testId = localStorage.getItem('test_entry_id');
+            if (!testId) {
+                updateStatus('crudStatus', '⚠️ Please create test data first', 'warning');
+                return;
+            }
+            
+            updateStatus('crudStatus', `⏳ Updating entry ${testId}...`, 'warning');
+            log(`Updating entry ${testId}...`);
+            
+            try {
+                const { data, error } = await supabase
+                    .from('test_entries')
+                    .update({
+                        name: `Updated Entry ${Date.now()}`,
+                        description: 'This entry was updated by the connection tester',
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', testId)
+                    .select();
+                
+                if (error) throw error;
+                
+                updateStatus('crudStatus', `✅ Entry ${testId} updated successfully`, 'success');
+                log(`✅ Updated entry ${testId}`);
+                
+            } catch (error) {
+                updateStatus('crudStatus', `❌ Update failed: ${error.message}`, 'error');
+                log(`Update error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function deleteTestData() {
+            if (!supabase) {
+                supabase = initSupabase();
+            }
+            
+            const testId = localStorage.getItem('test_entry_id');
+            if (!testId) {
+                updateStatus('crudStatus', '⚠️ Please create test data first', 'warning');
+                return;
+            }
+            
+            updateStatus('crudStatus', `⏳ Deleting entry ${testId}...`, 'warning');
+            log(`Deleting entry ${testId}...`);
+            
+            try {
+                const { error } = await supabase
+                    .from('test_entries')
+                    .delete()
+                    .eq('id', testId);
+                
+                if (error) throw error;
+                
+                localStorage.removeItem('test_entry_id');
+                updateStatus('crudStatus', `✅ Entry ${testId} deleted successfully`, 'success');
+                log(`✅ Deleted entry ${testId}`);
+                
+            } catch (error) {
+                updateStatus('crudStatus', `❌ Delete failed: ${error.message}`, 'error');
+                log(`Delete error: ${error.message}`, 'error');
+            }
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            log('Page loaded. Ready to test Supabase connection.', 'info');
+            
+            // Load saved credentials
+            const { url, key } = getCredentials();
+            if (url && key) {
+                log('Found saved credentials in localStorage', 'success');
+                setTimeout(testConnection, 1000);
+            }
+        });
+    </script>
+</body>
+</html>
